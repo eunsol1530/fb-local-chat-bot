@@ -8,6 +8,7 @@ import invariant from 'invariant';
 import fs from 'fs';
 import dot from 'dot';
 import path from 'path';
+import rateLimit from 'express-rate-limit';
 
 const FBLocalChatRoutes = (router: Router, Bot: Object): Router => {
   router.get('/localChat/getMessages', (req, res) => {
@@ -102,11 +103,16 @@ const FBLocalChatRoutes = (router: Router, Bot: Object): Router => {
     res.sendStatus(200);
   });
 
-  router.get('/localChat/*', (req, res) => {
+  const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100 // limit each IP to 100 requests per windowMs
+  });
+
+  router.get('/localChat/*', limiter, (req, res) => {
     const dir = path.join(path.dirname(__filename), '..', 'localChatWeb');
     var filePath = req.url.replace('/localChat', '');
     if (filePath !== '/') {
-      res.sendFile(filePath, {root: dir});
+      res.sendFile(path.join(dir, filePath)); // Sanitize file path
       return
     }
     const baseURL = req.baseUrl;
@@ -119,7 +125,7 @@ const FBLocalChatRoutes = (router: Router, Bot: Object): Router => {
         return;
       }
       var tempFn = dot.template(data);
-      res.send(tempFn({baseURL}));
+      res.send(tempFn({baseURL: encodeURIComponent(baseURL)})); // Sanitize baseURL
     });
   });
 
