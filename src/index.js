@@ -79,7 +79,9 @@ class Bot extends EventEmitter {
     });
 
     router.post('/', (req, res) => {
-      this.handleMessage(req.body);
+      if (typeof req.body === 'object' && req.body !== null) {
+        this.handleMessage(req.body);
+      }
       res.sendStatus(200);
     });
 
