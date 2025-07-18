@@ -73,7 +73,7 @@ class Bot extends EventEmitter {
     let router = Router();
     router.get('/', (req, res) => {
       if (req.query['hub.verify_token'] === this._verifyToken) {
-        res.send(req.query['hub.challenge']);
+        return res.send(req.query['hub.challenge']);
       }
       res.send('Error, wrong validation token');
     });
